@@ -1445,13 +1445,16 @@ function hsUpsert(r){const i=HIST.findIndex(z=>z.id==r.id);if(i>=0){HIST[i]=r;re
  const m=hsMerge(z,r);if(hsSig(m)==hsSig(z))return'duplicate';m.id=z.id;HIST[HIST.indexOf(z)]=m;return'merged'}
 function hsCompact(){let n=0;for(let i=0;i<HIST.length;i++){for(let j=i+1;j<HIST.length;j++){if(hsSame(HIST[i],HIST[j])){const k=HIST[i].id;HIST[i]=hsMerge(HIST[i],HIST[j]);HIST[i].id=k;HIST.splice(j,1);j=i;n++}}}return n}
 /* --- 파일/텍스트 → 텍스트 · 이미지 · AI 보조 --- */
-const hsLoad=(u,k)=>new Promise((ok,no)=>{if(window[k])return ok();const s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=()=>no(new Error('PDF 읽기 도구는 온라인에서 처음 한 번 필요합니다'));document.head.append(s)});
+const hsTO=(p,ms,msg)=>{let t;return Promise.race([p,new Promise((_,no)=>{t=setTimeout(()=>no(new Error(msg||'시간이 초과되었습니다')),ms)})]).finally(()=>clearTimeout(t))};
+const hsLoad=(u,k)=>new Promise((ok,no)=>{if(window[k])return ok();const s=document.createElement('script');const t=setTimeout(()=>no(new Error('읽기 도구를 불러오지 못했습니다(인터넷 연결 확인)')),25000);s.src=u;s.onload=()=>{clearTimeout(t);ok()};s.onerror=()=>{clearTimeout(t);no(new Error('읽기 도구는 온라인에서 처음 한 번 필요합니다'))};document.head.append(s)});
 async function hsPdf(f,wantImg){await hsLoad('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js','pdfjsLib');pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
  const doc=await pdfjsLib.getDocument({data:new Uint8Array(await f.arrayBuffer())}).promise,n=Math.min(doc.numPages,12);let t='';const imgs=[];
  for(let p=1;p<=n;p++){const pg=await doc.getPage(p),tc=await pg.getTextContent();let y=null,line='';for(const it of tc.items){const yy=Math.round(it.transform[5]);if(y!==null&&Math.abs(yy-y)>3){t+=line.trim()+'\n';line=''}y=yy;line+=it.str+' '}t+=line.trim()+'\n';
   if(wantImg&&p<=3&&t.replace(/\s/g,'').length<60){const vp=pg.getViewport({scale:1.5}),cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;imgs.push(await new Promise(r=>cv.toBlob(r,'image/jpeg',.82)))}}
  return{text:t,imgs}}
 const hsImg=f=>new Promise((ok,no)=>rs(f,u=>{try{const b=atob(u.split(',')[1]),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);ok(new Blob([a],{type:'image/jpeg'}))}catch(e){no(e)}},1800));
+const hsProg=m=>{if(m&&m.status=='recognizing text'){const p=Math.round(m.progress*100);if(p-(HSR._p||0)>=10||p>=100){HSR._p=p>=100?0:p;HSR.msg='사진 글자 인식 중… '+p+'%';if(DBS.mode=='hs')hsRender(1)}}};
+async function hsOcr(imgs){await hsLoad('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js','Tesseract');const w=await hsTO(Tesseract.createWorker('kor+eng',1,{logger:hsProg}),90000,'OCR 언어 데이터를 받지 못했습니다(인터넷 연결 확인)');let t='';try{for(const b of imgs.slice(0,6)){const r=await w.recognize(b);t+=r.data.text+'\n'}}finally{try{await w.terminate()}catch(e){}}return t}
 async function hsSample(){try{return window.claude?await claude.use('sample'):null}catch(e){return null}}
 const HSAIP=`당신은 아파트 도장·방수 공사의 입찰공고·낙찰결과 문서에서 정보를 뽑는 도우미입니다. 문서에 실제로 적힌 내용만 사용하고 추측하지 마세요. K-apt 낙찰 결과 화면이면 참여업체 표에서 '낙찰여부'가 Y인 행의 회사·응찰금액이 낙찰업체·낙찰금액이고, 입찰결과 등록일을 낙찰일(daw), 개찰일을 dop로 쓰세요. JSON 객체 하나로만 답하세요. 형식: {"items":[항목,…]}. 공종이 여러 개면 공종별로 항목을 나눕니다.
 항목 키: nm(단지명), ad(소재지·주소), wn(공사명·공고명), tp(외벽|방수|주차장|내부 중 하나. 외벽=외벽도장·재도장·균열보수, 방수=옥상방수 등, 주차장=주차장 바닥·에폭시, 내부=계단실·복도·내부도장), k(bid=입찰공고만, award=낙찰·계약, work=착공·준공 기록 있음), dn(공고일), dop(개찰·입찰일), daw(낙찰·계약일), dst(착공일), den(준공일) — 날짜는 YYYY-MM-DD, co(낙찰·시공업체 상호), am(금액 원 단위 정수. 낙찰·계약금액 우선, 없으면 기초·추정금액), kw(문서에 나온 핵심 공종 키워드 배열), mm(특이사항 한 줄), bn(입찰·공고번호), mt(공법·사양: 우레탄방수·아크릴·에폭시 등 문서에 적힌 것). 알 수 없는 값은 빈 문자열 또는 0.`;
@@ -1473,8 +1476,8 @@ async function hsExtract(R,src,useAI){let items=[],aiMsg='';
  if(!items.length&&R.rows)items=hsParseRows(R.rows,src);
  if(!items.length&&R.text&&!R.json)items=hsParseText(R.text,src);
  const ai=useAI?await hsSample():null;
- if(ai&&(R.imgs.length||R.text||items.length)){try{const body=R.text?'\n\n[문서 내용]\n'+String(R.text).slice(0,14000):'\n\n(첨부 이미지 참고)',r0=await ai.json(HSAIP+body,R.imgs.length?{images:R.imgs.slice(0,3),modelTier:'default'}:{modelTier:'default'}),r=typeof r0=='string'?JSON.parse(r0.replace(/^[^\[{]*|[^\]}]*$/g,'')):r0,a=hsFromAI(r,src);if(a.length){a.forEach(z=>{const cl=hsClassify((z.wn||'')+' '+(z.mm||''));const kw=[...new Set([...(z.kw||[]),...(cl[z.tp]||[])])];z.kw=kw;if(!z.warn)z.warn=[];if(!z.nm)z.warn.push('단지명 없음');if(!z.am)z.warn.push('금액 없음')});items=a;aiMsg='Claude 보조로 읽었습니다'}}catch(e){aiMsg=e&&e.code=='not_granted'?'Claude 읽기가 허용되지 않아 규칙으로만 읽었습니다':'Claude 보조 오류('+String(e&&(e.code||e.message)||e).slice(0,80)+')로 규칙으로만 읽었습니다'}}
- else if(R.imgs.length&&!items.length)aiMsg='이 화면에서는 사진·스캔 문서를 자동으로 읽을 수 없습니다. 글자를 복사해 붙여넣어 주세요';
+ if(ai&&(R.imgs.length||R.text||items.length)){try{const body=R.text?'\n\n[문서 내용]\n'+String(R.text).slice(0,14000):'\n\n(첨부 이미지 참고)',r0=await hsTO(ai.json(HSAIP+body,R.imgs.length?{images:R.imgs.slice(0,3),modelTier:'default'}:{modelTier:'default'}),60000,'응답 시간 초과'),r=typeof r0=='string'?JSON.parse(r0.replace(/^[^\[{]*|[^\]}]*$/g,'')):r0,a=hsFromAI(r,src);if(a.length){a.forEach(z=>{const cl=hsClassify((z.wn||'')+' '+(z.mm||''));const kw=[...new Set([...(z.kw||[]),...(cl[z.tp]||[])])];z.kw=kw;if(!z.warn)z.warn=[];if(!z.nm)z.warn.push('단지명 없음');if(!z.am)z.warn.push('금액 없음')});items=a;aiMsg='Claude 보조로 읽었습니다'}}catch(e){aiMsg=e&&e.code=='not_granted'?'Claude 읽기가 허용되지 않아 규칙으로만 읽었습니다':'Claude 보조 오류('+String(e&&(e.code||e.message)||e).slice(0,80)+')로 규칙으로만 읽었습니다'}}
+ if(!items.length&&R.imgs.length){try{HSR.msg='사진 글자 인식 준비 중…';if(DBS.mode=='hs')hsRender(1);const t=await hsOcr(R.imgs);if(t.replace(/\s/g,'').length>20){items=hsParseText(t,src);aiMsg=(aiMsg?aiMsg+' · ':'')+'사진 글자 인식(OCR)으로 읽었습니다. 인식 오류가 있을 수 있으니 확인하세요'}else aiMsg=(aiMsg?aiMsg+' · ':'')+'사진에서 글자를 인식하지 못했습니다'}catch(e){aiMsg=(aiMsg?aiMsg+' · ':'')+'사진 글자 인식을 쓰지 못했습니다('+String(e&&e.message||e).slice(0,60)+'). 글자를 복사해 붙여넣어 주세요'}}
  return{items,aiMsg}}
 /* --- HWP(5.x) · HWPX 본문 텍스트 읽기 (외부 라이브러리 없이) --- */
 async function hsInfl(u8){for(const f of ['deflate-raw','deflate']){const ds=new DecompressionStream(f),w=ds.writable.getWriter(),rd=ds.readable.getReader(),ch=[];let n=0,ok=0;
@@ -1516,7 +1519,7 @@ const hsRecLine=r=>[r.tp,(r.dn&&(r.daw||r.den||r.dst||r.co))?'공고+낙찰':hsL
 const hsCxLbl=x=>x?`${x.n} · ${(rjAddr(x)||'').slice(0,24)}${x.hh?' · '+fmt(x.hh)+'세대':''}`:'';
 const hsRow=(r,ttl,sub)=>`<div class="hsrec2"><button type="button" class="hsrec" data-db="hsed" data-v="${r.id}"><b>${esc(ttl)}</b><small>${esc(sub)}</small></button><div class="hsact"><button type="button" data-db="hsed" data-v="${r.id}">수정</button><button type="button" data-db="hsrm" data-v="${r.id}">${HSR.rm==r.id?'정말 삭제':'삭제'}</button></div></div>`;
 function hsRe(){const b=document.querySelector('#db .dbb'),y=b?b.scrollTop:0;DBS.mode=='rj'?rjRender():dbRender();const n=document.querySelector('#db .dbb');if(n)n.scrollTop=y}
-function hsOpen(view,x,ed){HSR.view=view;HSR.x=x||'';HSR.ret=DBS.mode=='rj'?'rj':'db';HSR.items=null;HSR.ed=ed||null;HSR.msg='';HSR.tx='';HSR.cf=0;DBS.mode='hs';const e=dbE();e.hidden=false;e.className='rjv';hsRender()}
+function hsOpen(view,x,ed){HSR.view=view;HSR.x=x||'';HSR.ret=DBS.mode=='rj'?'rj':'db';HSR.items=null;HSR.ed=ed||null;HSR.msg='';HSR.tx='';HSR.cf=0;HSR.busy=0;HSR.tk=(HSR.tk||0)+1;DBS.mode='hs';const e=dbE();e.hidden=false;e.className='rjv';hsRender()}
 function hsGo(){HSR.view='';HSR.items=null;HSR.ed=null;HSR.msg='';const x=HSR.x?hsCxOf(HSR.x):null;
  if(HSR.ret=='rj'&&x){DBS.mode='rj';DBS.view='detail';DBS.cur=x;rjRender()}else if(HSR.ret=='rj'){DBS.mode='rj';DBS.view='list';rjRender()}else{DBS.mode='db';DBS.tab='hs';dbE().className='';dbRender()}}
 function hsRender(keep){const e=dbE();if(!e)return;const old=keep&&e.querySelector('.dbb')?e.querySelector('.dbb').scrollTop:0,v=HSR.view;
@@ -1527,7 +1530,7 @@ function hsIn(){const x=HSR.x?hsCxOf(HSR.x):null;
  <div class="dba"><button class="pri" data-db="hsfile"${HSR.busy?' disabled':''}>파일 선택 (CSV · TXT · JSON · XLSX · PDF · HWP · 이미지)</button></div>
  <label class="hsl2">공고·낙찰 텍스트 붙여넣기<textarea id="hstx" class="i" rows="8" placeholder="예) 단지명: 래미안 강남&#10;공사명: 외벽 재도장 및 옥상방수 공사&#10;공고일 2021-03-02 / 개찰일 2021-03-16&#10;낙찰업체 (주)한솔페인트  낙찰금액 3억 2천만원">${esc(HSR.tx)}</textarea></label>
  <label class="hsck"><input type="checkbox" id="hsai"${HSR.ai?' checked':''}>Claude로 문서·사진 읽기 보조 (사용 가능할 때만, 꺼도 규칙으로 읽음)</label>
- <div class="dba"><button class="pri" data-db="hsrun"${HSR.busy?' disabled':''}>${HSR.busy?'읽는 중…':'핵심 키워드 추출'}</button></div>
+ <div class="dba"><button class="pri" data-db="hsrun"${HSR.busy?' disabled':''}>${HSR.busy?'읽는 중…':'핵심 키워드 추출'}</button>${HSR.busy?'<button data-db="hsabort">중단</button>':''}</div>
  ${HSR.msg?`<p class="dbm hsm">${esc(HSR.msg)}</p>`:''}<p class="dbm">공종 키워드(외벽·재도장·균열보수 / 방수·옥상방수 / 주차장·에폭시 / 내부), 날짜(공고·개찰·낙찰·착공·준공), 업체, 금액, 단지명·지역을 추출해 미리보기로 보여 드립니다. 사진·스캔 PDF는 Claude 보조가 있을 때만 자동으로 읽습니다.</p></div>`;
  const L=HSR.items,n=L.filter(i=>i.inc&&i.c).length;
  return `<div class="rjk"><div class="rjs"><i>${RI.ck}</i><b>추출 미리보기</b><small class="r">${esc(HSR.src||'붙여넣기')} · ${L.length}건</small></div>${HSR.msg?`<p class="dbm hsm">${esc(HSR.msg)}</p>`:''}<p class="dbm">내용을 확인·수정하고 반영할 항목을 선택하세요. 낙찰·착공·준공일이 없는 입찰 공고는 보수주기 기점에서 제외됩니다.</p></div>
@@ -1546,7 +1549,7 @@ async function hsBuild(arr){await apInit();return arr.map(r=>{const it={...r,kw:
  else{const m=hsMatch(it.nm,it.ad);it.cands=m.cands.slice(0,8);if(m.x){it.c=m.x.c;it.how=m.how+' 일치'}else if(m.cands.length){it.how='후보 '+m.cands.length+'곳 — 선택하세요'}
   if(HSR.x){if(!it.c){it.c=HSR.x;it.cands=[hsCxOf(HSR.x),...it.cands].filter(Boolean);it.how='이 단지로 연결'}else if(it.c!=HSR.x){it.inc=0;it.how+=' · 다른 단지(기본 제외)'}}}
  if(!it.c)it.inc=0;return it})}
-async function hsRun(R,src){HSR.busy=1;HSR.msg='읽는 중…';hsRender(1);try{const r=await hsExtract(R,src,HSR.ai);HSR.src=src;const items=await hsBuild(r.items);if(items.length){HSR.items=items;HSR.msg=r.aiMsg||''}else{HSR.items=null;HSR.msg=(r.aiMsg?r.aiMsg+' · ':'')+'추출된 정보가 없습니다. 단지명·공사명·날짜가 있는 텍스트를 붙여넣거나 Claude 보조를 켜 보세요'}}catch(e){HSR.items=null;HSR.msg='⚠ '+(e&&e.message||e)}HSR.busy=0;hsRender()}
+async function hsRun(R,src){const tk=HSR.tk=(HSR.tk||0)+1;HSR.busy=1;HSR.msg='읽는 중…';hsRender(1);try{const r=await hsTO(hsExtract(R,src,HSR.ai),180000,'읽는 데 시간이 너무 오래 걸려 중단했습니다');if(tk!=HSR.tk)return;HSR.src=src;const items=await hsBuild(r.items);if(items.length){HSR.items=items;HSR.msg=r.aiMsg||''}else{HSR.items=null;HSR.msg=(r.aiMsg?r.aiMsg+' · ':'')+'추출된 정보가 없습니다. 단지명·공사명·날짜가 있는 텍스트를 붙여넣거나 Claude 보조를 켜 보세요'}}catch(e){if(tk!=HSR.tk)return;HSR.items=null;HSR.msg='⚠ '+(e&&e.message||e)}if(tk==HSR.tk){HSR.busy=0;hsRender()}}
 async function hsSaveItems(){const L=HSR.items||[];let ins=0,upd=0,dup=0,sk=0,mg=0;const cs=new Set();for(const it of L){if(!it.inc||!it.c){sk++;continue}const r=hsUpsert(hsMk(it,it.c));if(r=='inserted')ins++;else if(r=='updated')upd++;else if(r=='merged')mg++;else dup++;cs.add(it.c)}
  await hsSave();hsDirty();HSR.msg='';DBS.msg=`이력 반영 · 신규 ${ins}${mg?' · 보충 '+mg:''}${upd?' · 갱신 '+upd:''}${dup?' · 중복 '+dup:''}${sk?' · 제외 '+sk:''} (단지 ${cs.size}곳)`;if(!HSR.x&&cs.size==1)HSR.x=[...cs][0];hsGo();toast(DBS.msg)}
 /* --- 직접 입력 --- */
@@ -1596,7 +1599,8 @@ document.addEventListener('click',async e=>{const t=e.target.closest('[data-db]'
  if(a=='hsrm'){if(HSR.rm!=v){HSR.rm=v;hsRe();return}HSR.rm=0;const i=HIST.findIndex(z=>z.id==v);if(i>=0)HIST.splice(i,1);await hsSave();hsDirty();DBS.msg='이력을 삭제했습니다';hsRe();toast('이력을 삭제했습니다');return}
  if(a=='hsb'){if(HSR.view=='in'&&HSR.items){HSR.items=null;hsRender()}else hsGo();return}
  if(a=='hsredo'){HSR.items=null;hsRender();return}
- if(a=='hsfile'){const el=document.getElementById('hstx');if(el)HSR.tx=el.value;pickFile('.csv,.txt,.tsv,.json,.xlsx,.xls,.pdf,.hwp,.hwpx,image/*',async f=>{try{const R=await hsRead(f);await hsRun(R,f.name)}catch(er){HSR.busy=0;HSR.msg='⚠ '+(er&&er.message||er);hsRender()}});return}
+ if(a=='hsfile'){const el=document.getElementById('hstx');if(el)HSR.tx=el.value;pickFile('.csv,.txt,.tsv,.json,.xlsx,.xls,.pdf,.hwp,.hwpx,image/*',async f=>{const tk=HSR.tk=(HSR.tk||0)+1;HSR.busy=1;HSR.msg='파일 읽는 중…';hsRender(1);try{const R=await hsTO(hsRead(f),90000,'파일을 읽는 데 시간이 너무 오래 걸립니다');if(tk!=HSR.tk)return;await hsRun(R,f.name)}catch(er){if(tk==HSR.tk){HSR.busy=0;HSR.msg='⚠ '+(er&&er.message||er);hsRender()}}});return}
+ if(a=='hsabort'){HSR.tk=(HSR.tk||0)+1;HSR.busy=0;HSR.msg='읽기를 중단했습니다';hsRender();return}
  if(a=='hsrun'){const el=document.getElementById('hstx'),ai=document.getElementById('hsai');HSR.tx=el?el.value:'';HSR.ai=ai?(ai.checked?1:0):1;if(!HSR.tx.trim()){HSR.msg='붙여넣을 텍스트가 없습니다. 파일을 선택하거나 공고·낙찰 내용을 붙여넣어 주세요';hsRender(1);return}
   const txt=HSR.tx;let R={text:txt,rows:null,imgs:[],json:null};if(/^\s*[\[{]/.test(txt)){try{R.json=JSON.parse(txt)}catch(er){}}await hsRun(R,'붙여넣기');return}
  if(a=='hssave'){await hsSaveItems();return}
