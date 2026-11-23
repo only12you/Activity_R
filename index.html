@@ -518,6 +518,7 @@ html body #syed .sx-cd>b{margin-left:-8px!important;margin-right:-8px!important;
 /* 결과(입력값) 글자 크기 통일: 표·입력칸 모두 라벨과 같은 2.9rem */
 html body .vl input:not([type=checkbox]):not([type=radio]):not([type=file]),html body input.i:not([type=checkbox]):not([type=radio]):not([type=file]),html body textarea.i,html body select.i,html body .rjin input:not([type=checkbox]):not([type=radio]):not([type=file]){font-size:2.9rem!important}
 html body #ti2 input.i:not([type=checkbox]):not([type=radio]):not([type=file]){font-size:3.5rem!important}
+.fhc{margin-top:14px}.fhc .hsbt{margin-top:12px}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
@@ -630,7 +631,7 @@ const bands=f=>{const o=[];let c=[],w=0;groups(f).forEach(g=>{if(w+g.n>10&&c.len
 const inp=(k,key,ph,v)=>`<input class="i" data-k="${k}" data-key="${key}" placeholder="${ph}" value="${esc(v)}">`;
 function cg(b,bi,vals,ri,ro){let o='',lg='';b.cols.forEach((x,ci)=>{if(x.g!=lg){o+=(lg?'</div>':'')+`<h4>${x.g}</h4><div class="gr">`;lg=x.g}o+=`<label>${x.l}<input class="i" inputmode="decimal" ${x.c||ro?'readonly':''} data-k="g" data-b="${bi}" data-r="${ri}" data-c="${ci}" value="${esc(vals[ci])}"></label>`});return o+'</div>'}
 function blk(b,bi,d,n){let h=`<div class="chd"><h3><svg class="pin" viewBox="0 0 17 24"><path d="M8.5 0C3.8 0 0 3.8 0 8.5 0 15 8.5 24 8.5 24S17 15 17 8.5C17 3.8 13.2 0 8.5 0z" fill="#4a9a80"/><circle cx="8.5" cy="8.5" r="3.2" fill="#fff"/></svg>${b.t}</h3><div class="bt"><button data-a="nw">${PEN}New</button>${b.k=='list'&&b.cols&&b.cols.includes('현장스펙/당사제품')?`<button data-db="sppk" data-b="${bi}">${LST}사양</button>`:''}${b.lay==LAY2?`<button data-db="rj">${CAM}재도장</button>`:b.lay?`<label class="bl">${CAM}개요판<input type="file" accept="image/*" hidden data-k="ob"></label><button data-a="rd" class="${d.ob?'':'dis'}">${LST}읽기</button>`:''}</div></div>`+(b.u?'<p class="un">단위 : 백만원</p>':'')+(b.n?`<p class="nt">${b.n}</p>`:'');
- if(b.k=='kv')h+=kvT(b,bi,d)+(b.lay?'<div id="pgw">'+prog(b,bi,d)+'</div>':'');else if(0)h+=groups(b.f).map(g=>`<div class="gp"><h4>${g.g}</h4><div class="gr">${g.fs.map(x=>`<label>${x.l}<input class="i" data-k="v" data-b="${bi}" data-i="${x.i}" value="${esc(d.v[bi+'.'+x.i])}"></label>`).join('')}</div></div>`).join('');
+ if(b.k=='kv')h+=kvT(b,bi,d)+(b.lay?'<div id="pgw">'+prog(b,bi,d)+'</div>':'')+(b.lay==LAY2?'<div id="fhw">'+fhCard(d)+'</div>':'');else if(0)h+=groups(b.f).map(g=>`<div class="gp"><h4>${g.g}</h4><div class="gr">${g.fs.map(x=>`<label>${x.l}<input class="i" data-k="v" data-b="${bi}" data-i="${x.i}" value="${esc(d.v[bi+'.'+x.i])}"></label>`).join('')}</div></div>`).join('');
  else if(b.k=='grid'){const{disp,tot}=gv(b,bi,d),rh=(nm,vals,ri,ro)=>`<details class="rw${ro?' tot':''}"><summary>${esc(nm)}</summary>${cg(b,bi,vals,ri,ro)}</details>`;
   h+=b.rows.map((nm,ri)=>rh(nm,disp[ri],ri,0)).join('')+(tot?rh('합계',tot,'t',1):'')}
  else if(b.cat)h+=catUI(b,bi,d);else{h+=el(b,bi,d).map((r,ri)=>`<details class="rw"><summary><span>${esc((r[0]+' '+(r[1]||'')).trim()||'행 '+(ri+1))}</span><button class="x" data-a="dl" data-b="${bi}" data-r="${ri}">×</button></summary><div class="gr">${b.cols.map((l,ci)=>`<label>${l}<input class="i" data-k="l" data-b="${bi}" data-r="${ri}" data-c="${ci}" value="${esc(r[ci])}"></label>`).join('')}</div></details>`).join('')+`<button class="ad" data-a="al" data-b="${bi}">+ 행 추가</button>`+(b.sum!=null?`<div class="sm" id="sm${bi}">합계 ${lsum(b,bi,d)}</div>`:'')}
@@ -969,7 +970,7 @@ function rjDetail(x){const st=[['bld','세대수',fmt(x.hh)+'세대'],['blds','�
 function rjRender(){const e=dbE();if(!e)return;const x=DBS.view=='detail'?DBS.cur:null;
  e.innerHTML=`<div class="zb"><button type="button" data-db="rb" aria-label="뒤로">${RI.bk}</button><b>단지 DB 검색</b><button type="button" data-db="rs" aria-label="검색">${RI.sr}</button><button type="button" data-db="x" aria-label="닫기">${RI.home}</button></div><div class="dbb">${x?rjDetail(x):rjList()}</div><input type="file" id="dbf" hidden>`;const b=e.querySelector('.dbb');if(b)b.scrollTop=0}
 function rjOpen(fill){let e=dbE();if(!e){e=document.createElement('div');e.id='db';e.hidden=true;document.body.appendChild(e)}DBS.mode='rj';DBS.view='list';DBS.fill=fill!==0;DBS.q='';e.hidden=false;e.className='rjv';rjRender();apInit().then(()=>{if(!e.hidden&&DBS.mode=='rj'&&DBS.view=='list')rjRender();setTimeout(()=>{const i=document.getElementById('rjq');i&&i.focus()},30)})}
-function rjFill(){const x=DBS.cur;if(!x)return;const d=dat(cur().f);d.v['0.1']=x.n;d.v['0.2']=rjAddr(x);if(x.fl)d.v['0.16']=String(x.fl);if(x.dn)d.v['0.17']=String(x.dn);if(x.hh)d.v['0.18']=String(x.hh);hsFill(x,d);sv();dbE().hidden=true;dbE().className='';render();toast(`${x.n} 정보를 채웠습니다. 내용을 확인해 주세요`)}
+function rjFill(){const x=DBS.cur;if(!x)return;const d=dat(cur().f);d.apc=x.c;d.v['0.1']=x.n;d.v['0.2']=rjAddr(x);if(x.fl)d.v['0.16']=String(x.fl);if(x.dn)d.v['0.17']=String(x.dn);if(x.hh)d.v['0.18']=String(x.hh);hsFill(x,d);sv();dbE().hidden=true;dbE().className='';render();toast(`${x.n} 정보를 채웠습니다. 내용을 확인해 주세요`)}
 function pickFile(acc,cb){const f=document.getElementById('dbf');f.accept=acc;f.value='';f.onchange=async()=>{const fl=f.files[0];if(!fl)return;try{await cb(fl)}catch(e){DBS.msg='⚠ '+(e.message||e);dbRender()}};f.click()}
 const fText=async f=>{const b=await f.arrayBuffer();let t=new TextDecoder('utf-8').decode(b);if(t.includes('\uFFFD')){try{t=new TextDecoder('euc-kr').decode(b)}catch(e){}}return t};
 /* ===== 사양 DB (도장 시스템 라이브러리) ===== */
@@ -1375,7 +1376,41 @@ function hsKapt(text){const t=String(text).replace(/\s+/g,' ');if(!/참여업체
  return (tps.length?tps:['외벽']).map(tp=>({...base,tp,kw:cl[tp]||[],warn:base.warn.slice().concat(tps.length>1&&base.am?['금액은 공종 합산일 수 있음']:[])}))}
 const HSMT=['고탄성','탄성','우레탄','아크릴','에폭시','불소','실리콘','무기질','수성','시트방수','도막방수','액체방수','복합방수','아스팔트','침투성','발수','균열주입','에폭시주입','그라우팅','특허공법','Wet-on-Wet'];
 function hsMethod(lab,t){lab=String(lab||'').trim();if(lab)return lab.slice(0,60);const h=[];for(const k of HSMT){if(String(t).includes(k)&&!h.some(x=>x.includes(k)))h.push(k)}return h.slice(0,4).join('·')}
-function hsParseText(text,src){const kp=hsKapt(text);if(kp.length)return kp.map(z=>({...z,src:src||z.src}));const first=(String(text).split('\n').find(l=>l.trim())||'').trim(),title=/공사|도장|도색|방수|보수|입찰|낙찰/.test(first)?first.replace(/^[[(【<][^\])】>]*[\])】>]\s*/,''):'',blocks=hsBlocks(text),unit=/단위\s*[:：]?\s*천\s*원/.test(text)?1000:/단위\s*[:：]?\s*백만\s*원/.test(text)?1e6:1,out=[],one=blocks.filter(b=>b.cx||b.pj).length==1,whole=hsFindMoney(String(text).split('\n').filter(l=>/금액|추정|기초|예정가격|예산|낙찰|계약금|공사비|도급/.test(l)).join('\n'));
+/* --- K-apt 사업자 선정(경쟁입찰) 결과 공개 상세 — '낙찰업체 정보 · 계약기간 및 내용' 화면 전용 파서 --- */
+function hsKapt2(text){const raw=String(text||'').replace(/\r/g,'').replace(/\u00a0/g,' ');if(!/낙찰업체\s*정보/.test(raw)||!/계약기간\s*및\s*내용|계약기간/.test(raw))return[];
+ const L=raw.split('\n'),T=raw.replace(/[ \t]+/g,' '),g=(re,t)=>{const m=re.exec(t||T);return m?m[1].trim():''},iso=v=>{const d=hsDates(v||'');return d[0]||''};
+ const cells=l=>l.split(/\t+/).map(z=>z.trim());
+ /* 낙찰업체 정보 표: 헤더(회사명…계약선정방법) 다음 데이터 줄 */
+ let co='',am=0,sel='',vat=/VAT\s*별도/.test(raw),hi=L.findIndex(l=>/회사명/.test(l)&&/사업자\s*등록\s*번호|계약금액/.test(l));
+ if(hi>=0){let j=hi+1;while(j<L.length&&(!L[j].trim()||/^\(?VAT|계약선정방법\s*$/.test(L[j].trim())))j++;const dl=L[j]||'',cs=cells(dl);co=hsCleanCo((cs[0]||'').replace(/\((주|유)$/,'($1)'));const am0=/([\d,]{5,})\s*원/.exec(dl);if(am0)am=+am0[1].replace(/,/g,'');sel=cs[cs.length-1]&&!/\d/.test(cs[cs.length-1])?cs[cs.length-1]:''}
+ if(!co){const m=/낙찰\s*업체[^\n]*\n[^\n]*?((?:\(주\)|㈜)?[가-힣A-Za-z0-9&]{2,20}(?:\(주\)|㈜)?)/.exec(raw);if(m)co=hsCleanCo(m[1])}
+ if(!am){const m=/계약금액[\s\S]{0,80}?([\d,]{5,})\s*원/.exec(raw);if(m)am=+m[1].replace(/,/g,'')}
+ /* 날짜 */
+ const per=/계약기간\s*[:：]?\s*(\d{4}-\d{2}-\d{2})\s*~\s*(\d{4}-\d{2}-\d{2})/.exec(T),dst=per?per[1]:'',den=per?per[2]:'',daw=iso(g(/낙찰일\s*[:：]?\s*(\d{4}-\d{2}-\d{2})/)),dop=iso(g(/입찰서\s*제출\s*마감일\s*[:：]?\s*(\d{4}-\d{2}-\d{2})/))||iso(g(/서류\s*제출\s*마감일\s*[:：]?\s*(\d{4}-\d{2}-\d{2})/)),dn=iso(g(/(?:입찰)?공고일(?:자)?\s*[:：]?\s*(\d{4}-\d{2}-\d{2})/));
+ const reg=iso(g(/입찰결과\s*등록일\s*[:：]?\s*(\d{4}-\d{2}-\d{2})/)),hsd=iso(g(/현장설명일시\s*[:：]?\s*(\d{4}-\d{2}-\d{2})/)),hsp=g(/현장설명장소\s*[:：]?\s*(\S+)/);
+ /* 공사 내용(여러 줄) */
+ let bi=L.findIndex(l=>/^내용\t/.test(l)||/^내용\s{2,}/.test(l)),body=[];if(bi>=0){body.push(L[bi].replace(/^내용[\t ]+/,'').trim());for(let j=bi+1;j<L.length;j++){const z=L[j].trim();if(!z||/업체\s*본사\s*주소|평가점수|낙찰\/유찰/.test(z))break;body.push(z)}}
+ const bodyT=body.join(' / '),title=g(/입찰제목\s*[:：]?\s*(.+?)(?:\t|\s{2,}|\s*긴급입찰여부|$)/,raw.replace(/\r/g,'')).replace(/\s*(업체|사업자)\s*선정\s*$/,'').trim();
+ /* 단지 정보 표: 주택관리업자 | 단지명 | 관리사무소 주소 | 전화 | 팩스 | 동수 | 세대수 */
+ let nm='',ad='',dong='',hh='',xi=L.findIndex(l=>/단지명/.test(l)&&/관리사무소\s*주소/.test(l));
+ if(xi>=0){let j=xi+1;while(j<L.length&&!L[j].trim())j++;const cs=cells(L[j]||'');nm=hsCleanCx(cs[1]||'');ad=(cs[2]||'').replace(/\s*관리사무소\s*$/,'').replace(/\s+\S*아파트\s*$/,'').trim();const nums=cs.slice(3).filter(z=>/^\d{1,5}$/.test(z));if(nums.length>=2){dong=nums[nums.length-2];hh=nums[nums.length-1]}}
+ /* 입찰 정보 */
+ const bn=g(/입찰번호\s*[:：]?\s*(\d{10,})/),kind=g(/입찰종류\s*[:：]?\s*(\S+)/),meth=g(/낙찰방법\s*[:：]?\s*(\S+)/),bd=g(/입찰방법\s*[:：]?\s*(\S+)/),dep=g(/입찰보증금[^\d\n]*?(\d+)\s*\]?\s*%/),why=g(/낙찰\/유찰\/취소\s*사유\s*\n?\s*(.+)/,raw);
+ /* 공종 분류: 내용 줄 단위 (옥상 난간 보수는 방수가 아니라 외벽 계열로 본다) */
+ const cl={},add=(tp,ws)=>{cl[tp]=[...new Set([...(cl[tp]||[]),...ws])]},lines=body.length?body:[title];
+ lines.forEach(z=>{const w=[];if(/균열/.test(z))w.push('균열보수');if(/재도장|도색|도장|페인트/.test(z))w.push('재도장');if(/코킹|실링/.test(z))w.push('코킹');if(/철재|난간/.test(z))w.push(/난간/.test(z)?'난간 보수':'철재류');if(/부대시설/.test(z))w.push('부대시설');
+  if(/방수|누수|우레탄/.test(z))add('방수',[...(/옥상/.test(z)?['옥상방수']:['방수']),...w]);
+  else if(/주차(?:선|장)/.test(z))add('주차장',['주차선',...w]);
+  else if(/내부|공용부|계단|복도|세대/.test(z)&&!/외부/.test(z))add('내부',['건물내부',...w]);
+  else add('외벽',[...(/외벽|외부/.test(z)?['외벽']:/난간|철재|부대시설|코킹|창틀/.test(z)?[]:[]),...w])});
+ if(!Object.keys(cl).length){const c2=hsClassify(title+' '+bodyT);Object.keys(c2).forEach(k=>add(k,c2[k]))}
+ const tps=HST.filter(t=>cl[t]);
+ const mm=['K-apt '+(bn||''),[kind,meth].filter(Boolean).join('·'),sel?'계약선정 '+sel:'',hsd?'현장설명 '+hsd.slice(2)+(hsp?' '+hsp:''):'',dep?'보증금 '+dep+'%':'',vat?'VAT 별도':'',reg?'결과등록 '+reg.slice(2):'',why].filter(Boolean).join(' · ').slice(0,160);
+ const base={nm,ad,bn,mt:hsMethod('',title+' '+bodyT),wn:(title||body[0]||'').slice(0,120),k:(den||dst)?'work':'award',dn,dop,daw,dst,den,co,am,ak:'award',mm,src:'K-apt 낙찰 결과',warn:[]};
+ if(!nm)base.warn.push('단지명 없음');if(!co)base.warn.push('업체명 없음');if(!am)base.warn.push('금액 확인 필요');if(!tps.length)base.warn.push('공종 미인식(직접 선택)');
+ if(dong&&hh)base.mm=(base.mm+' · 단지 '+dong+'개동 '+hh+'세대').slice(0,170);
+ return (tps.length?tps:['외벽']).map(tp=>({...base,tp,kw:(cl[tp]||[]).slice(0,10),warn:base.warn.slice().concat(tps.length>1&&base.am?['금액은 공종 합산일 수 있음']:[])}))}
+function hsParseText(text,src){const kp=hsKapt(text);if(kp.length)return kp.map(z=>({...z,src:src||z.src}));const k2=hsKapt2(text);if(k2.length)return k2.map(z=>({...z,src:src||z.src}));const first=(String(text).split('\n').find(l=>l.trim())||'').trim(),title=/공사|도장|도색|방수|보수|입찰|낙찰/.test(first)?first.replace(/^[[(【<][^\])】>]*[\])】>]\s*/,''):'',blocks=hsBlocks(text),unit=/단위\s*[:：]?\s*천\s*원/.test(text)?1000:/단위\s*[:：]?\s*백만\s*원/.test(text)?1e6:1,out=[],one=blocks.filter(b=>b.cx||b.pj).length==1,whole=hsFindMoney(String(text).split('\n').filter(l=>/금액|추정|기초|예정가격|예산|낙찰|계약금|공사비|도급/.test(l)).join('\n'));
  const withB=blocks.filter(b=>b.cx||b.pj);if(!withB.length&&String(text).trim().length>5){withB.push({_l:[String(text).slice(0,300)],pj:title||first})}
  for(const b of withB){const L=(b._l||[]).join(' '),all=one||withB.length==1?text:L,o={nm:'',ad:'',bn:(b.bn||'').replace(/\D/g,'').slice(0,24),mt:'',wn:(b.pj||(one?title:'')||'').slice(0,120),k:'',dn:'',dop:'',daw:'',dst:'',den:'',co:'',am:0,ak:'',mm:'',src:src||'',warn:[]};
   o.nm=hsCleanCx(b.cx||hsCxFromPj(o.wn));o.ad=(b.ad||'').split(/\s{2,}|[|\t]/)[0].trim().slice(0,120);
@@ -1521,6 +1556,7 @@ const hsRow=(r,ttl,sub)=>`<div class="hsrec2"><button type="button" class="hsrec
 function hsRe(){const b=document.querySelector('#db .dbb'),y=b?b.scrollTop:0;DBS.mode=='rj'?rjRender():dbRender();const n=document.querySelector('#db .dbb');if(n)n.scrollTop=y}
 function hsOpen(view,x,ed){HSR.view=view;HSR.x=x||'';HSR.ret=DBS.mode=='rj'?'rj':'db';HSR.items=null;HSR.ed=ed||null;HSR.msg='';HSR.tx='';HSR.cf=0;HSR.busy=0;HSR.tk=(HSR.tk||0)+1;DBS.mode='hs';const e=dbE();e.hidden=false;e.className='rjv';hsRender()}
 function hsGo(){HSR.view='';HSR.items=null;HSR.ed=null;HSR.msg='';const x=HSR.x?hsCxOf(HSR.x):null;
+ if(HSR.ret=='form'){HSR.ret='db';const e=dbE();e.hidden=true;e.className='';DBS.mode='db';render();return}
  if(HSR.ret=='rj'&&x){DBS.mode='rj';DBS.view='detail';DBS.cur=x;rjRender()}else if(HSR.ret=='rj'){DBS.mode='rj';DBS.view='list';rjRender()}else{DBS.mode='db';DBS.tab='hs';dbE().className='';dbRender()}}
 function hsRender(keep){const e=dbE();if(!e)return;const old=keep&&e.querySelector('.dbb')?e.querySelector('.dbb').scrollTop:0,v=HSR.view;
  e.innerHTML=`<div class="zb"><button type="button" data-db="hsb" aria-label="뒤로">${RI.bk}</button><b>${v=='edit'?'공사 이력 입력':'입찰·낙찰 등록'}</b><button type="button" style="visibility:hidden" tabindex="-1" aria-hidden="true">${RI.sr}</button><button type="button" data-db="x" aria-label="닫기">${RI.home}</button></div><div class="dbb">${v=='edit'?hsEdit():hsIn()}</div><input type="file" id="dbf" hidden>`;const b=e.querySelector('.dbb');if(b)b.scrollTop=old}
@@ -1591,6 +1627,23 @@ function hsFill(x,d){if(!d||!d.v)return;const c=hsCalc(x),f=cur().f;if(f&&f.code
  if(HSFOV.pg)for(const t of HST){if(c[t].last){add(d.p=d.p||[],`[이력] ${t} ${hsRecLine(c[t].last).replace(t+' · ','')}`);n++}}
  if(HSFOV.pl)for(const t of HST){const z=c[t];if(z.state=='도래'||z.state=='도래임박'){add(d.q=d.q||[],`[주기] ${t=='외벽'?'외벽 재도장':t=='방수'?'방수 보수':t=='주차장'?'주차장 바닥 도장 보수':'내부 도장'} ${z.state} (${hsRemTxt(z)}) · 법정 ${z.cy}년, 기점 ${hsYM(z.base)}(${z.src})`);n++}}
  return n}
+/* ===== 재도장 페이지: 과거 도장 이력 등록 ===== */
+function fhCx(d){d=d||dat(cur().f);try{const x=d.apc?hsCxOf(d.apc):null;if(x)return x;const m=hsMatch(d.v['0.1']||'',d.v['0.2']||'');return m&&m.x?m.x:null}catch(e){return null}}
+function fhCard(d){
+ if(!AP.ready){apInit().then(()=>fhRe());return `<div class="rjk fhc"><div class="rjs"><i>${LST}</i><b>과거 도장 이력</b></div><p class="dbm">단지 DB를 불러오는 중…</p></div>`}
+ const x=fhCx(d);
+ if(!x)return `<div class="rjk fhc"><div class="rjs"><i>${LST}</i><b>과거 도장 이력</b></div><p class="dbm">재도장 버튼으로 단지를 고르면 그 단지의 과거 도장·방수 이력을 등록하고 법정 보수주기를 계산합니다. 현장명·소재지가 단지 DB와 일치하면 자동으로 연결됩니다.</p><div class="dba"><button class="pri" data-db="rj">재도장 단지 선택</button></div></div>`;
+ const c=hsCalc(x),H=hsOf(x.c).slice().sort((a,b)=>hsRecDt(a)<hsRecDt(b)?1:-1);
+ const row=t=>{const z=c[t],L=z.last;return `<div class="hsr"><div class="hsr1"><b>${t}</b>${hsBadge(z)}<span>${esc(hsRemTxt(z))}</span></div><div class="hsr2">법정 ${z.cy}년${z.base?` · 기점 ${hsYM(z.base)}(${z.src}) · 경과 ${z.el}년`:' · 기점일 없음(사용승인일 미등록)'}</div>${L?`<div class="hsr3">최근 ${esc(hsRecLine(L))}</div>`:`<div class="hsr3 m">과거 도장 이력 없음${z.base?' · 사용승인일 기준':''}</div>`}</div>`};
+ const rec=r=>`<div class="hsrec2"><button type="button" class="hsrec" data-db="fhed" data-v="${r.id}"><b>${esc(hsRecLine(r))}</b><small>${esc([r.wn,hsKw(r),r.pend?'기점 제외':''].filter(Boolean).join(' · '))}</small></button><div class="hsact"><button type="button" data-db="fhed" data-v="${r.id}">수정</button><button type="button" data-db="fhrm" data-v="${r.id}">${HSR.rm==r.id?'정말 삭제':'삭제'}</button></div></div>`;
+ return `<div class="rjk fhc"><div class="rjs"><i>${LST}</i><b>과거 도장 이력</b><small class="r">${esc(x.n)}</small></div>${HST.map(row).join('')}${H.length?`<div class="hsh2">등록된 과거 이력 ${H.length}건</div>${H.slice(0,6).map(rec).join('')}${H.length>6?`<p class="dbm">나머지 ${H.length-6}건은 DB 관리 → 이력에서 확인합니다</p>`:''}`:''}<div class="hsbt"><button class="pri" data-db="fhnew">+ 과거 도장 이력 입력</button><button data-db="fhin">입찰·낙찰 등록 (파일/텍스트)</button><button data-db="fhfill">이력·주기를 이 보고서에 반영</button></div><div class="hsfo"><b>반영 범위</b><label><input type="checkbox" data-hsfo="ov"${HSFOV.ov?' checked':''}>도장 범위 4칸에 최근 이력·주기 상태</label><label><input type="checkbox" data-hsfo="pg"${HSFOV.pg?' checked':''}>진행사항에 최근 도장·방수 이력</label><label><input type="checkbox" data-hsfo="pl"${HSFOV.pl?' checked':''}>예정사항에 재도장 계획·주기 상태</label></div></div>`}
+function fhRe(){const w=document.getElementById('fhw');if(w)w.innerHTML=fhCard(dat(cur().f))}
+function fhOpen(view,c,ed){if(!dbE()){const e=document.createElement('div');e.id='db';e.hidden=true;document.body.appendChild(e)}hsOpen(view,c,ed);HSR.ret='form'}
+document.addEventListener('click',async e=>{const t=e.target.closest('[data-db]');if(!t)return;const a=t.dataset.db,v=t.dataset.v;if(!/^fh/.test(a))return;const x=fhCx();
+ if(a=='fhnew'||a=='fhin'){if(!x){toast('먼저 재도장 버튼으로 단지를 선택하세요');return}fhOpen(a=='fhin'?'in':'edit',x.c);return}
+ if(a=='fhed'){const r=HIST.find(z=>z.id==v);if(r)fhOpen('edit',r.c,{...r,kw:(r.kw||[]).slice()});return}
+ if(a=='fhrm'){if(HSR.rm!=v){HSR.rm=v;fhRe();return}HSR.rm=0;const i=HIST.findIndex(z=>z.id==v);if(i>=0)HIST.splice(i,1);await hsSave();hsDirty();fhRe();toast('이력을 삭제했습니다');return}
+ if(a=='fhfill'){if(!x)return;const d=dat(cur().f);const clr=(ar,re)=>{const r=(ar||[]).filter(z=>!re.test(String(z).trim()));return r.length?r:['']};if(HSFOV.ov)['0.8','0.9','0.10','0.11'].forEach(k=>{if(/^(이력 없음|최근 ).*주기\s*[\d.]+년/.test(String(d.v[k]||'')))d.v[k]=''});if(HSFOV.pg)d.p=clr(d.p,/^\[이력\]/);if(HSFOV.pl)d.q=clr(d.q,/^\[주기\]/);const n=hsFill(x,d);sv();render();toast(n?`이력·주기 ${n}건을 보고서에 반영했습니다`:'반영할 내용이 없습니다 (과거 이력이나 주기 상태가 없습니다)')}});
 /* --- 이벤트 --- */
 document.addEventListener('click',async e=>{const t=e.target.closest('[data-db]');if(!t)return;const a=t.dataset.db,v=t.dataset.v;if(!/^hs/.test(a))return;
  if(a=='hsin'){const x=DBS.mode=='rj'&&DBS.view=='detail'&&DBS.cur?DBS.cur.c:'';hsOpen('in',x);return}
