@@ -547,7 +547,9 @@ html body #ti2 input.i:not([type=checkbox]):not([type=radio]):not([type=file]){f
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Activity">
-</head><body>
+<style id="v8css">.sadg{grid-template-columns:repeat(3,1fr)!important;gap:5px!important}.sad{padding:5px 2px!important;border-radius:10px!important}.sad b{font-size:16px!important;line-height:1.1}.sad span{font-size:10.5px!important}.sadn{font-size:10.5px!important;margin:4px 0 0!important}.sak{padding-top:9px!important;padding-bottom:9px!important;margin-bottom:6px!important}.sak .rjs{margin-bottom:4px!important}.sacr{margin:3px 0!important}
+.satl{display:flex;align-items:center;gap:8px;margin-top:7px;font-size:13.5px;min-width:0}.satl>span{color:var(--mu);font-size:11.5px;flex:none}.satl a{color:var(--tx);font-weight:800;text-decoration:none;letter-spacing:.2px}.satl .call{margin-left:auto;flex:none;padding:7px 14px;border-radius:999px;background:#1f6feb;color:#fff!important;min-height:34px;display:inline-flex;align-items:center;font-size:12.5px}.satl.no em{font-style:normal;color:var(--mu)}
+body.kbd{padding-bottom:calc(var(--kb,0px) + 260px)!important}#rjq{scroll-margin-top:8px}</style></head><body>
 <div class="hd"><div class="lg"><i></i></div><div><h1>Activity 보고서</h1><p>활동 보고서를 작성하고 관리하세요</p></div><div class="ic"><span class="bl2"><svg viewBox="0 0 24 24"><path d="M6 17V11a6 6 0 1 1 12 0v6l2 2H4zM10 21h4"/></svg></span><span class="bl2" data-db="db" role="button" aria-label="DB 관리"><svg viewBox="0 0 24 24"><path d="M3 7h18M3 12h18M3 17h18"/></svg></span></div></div>
 <div class="row" id="gt"></div><div class="row" id="sc"></div>
 <div id="ti"></div><div class="row seg" id="sg"></div><div id="ti2"></div>
@@ -1398,12 +1400,22 @@ function hsKapt(text){const t=String(text).replace(/\s+/g,' ');if(!/참여업체
  const cl=hsClassify(title+' '+body),tps=Object.keys(cl),nm=cx?hsCleanCx(cx[1]):'',ad=cx?cx[2].trim():'';
  const failed=!w&&/유찰|취소/.test(t);
  const mm=[no?'K-apt '+no:'',[kind,meth].filter(Boolean).join('·'),'응찰 '+rows.length+'곳'+(isFinite(low)?'(최저 '+hsWon(low)+')':''),per?'계약기간 '+per:'',failed?'유찰/취소':'',reason].filter(Boolean).join(' · ').slice(0,160);
- const base={nm,ad,bn:no,mt:hsMethod('',title+' '+body),wn:title,k:'award',dn:'',dop:d?d[2]:'',daw:d?d[1]:'',dst:'',den:'',co:w?w.co:'',am:w?w.am:0,ak:'award',mm,src:'K-apt 낙찰 결과',warn:[]};
+ const base={nm,ad,bn:no,mt:hsMethodX(text)||hsMethod('',title+' '+body),tl:cx?saFt(cx[3]):'',fx:cx?saFt(cx[4]):'',wn:title,k:'award',dn:'',dop:d?d[2]:'',daw:d?d[1]:'',dst:'',den:'',co:w?w.co:'',am:w?w.am:0,ak:'award',mm,src:'K-apt 낙찰 결과',warn:[]};
  if(!w)base.warn.push('낙찰자(낙찰여부 Y) 행을 찾지 못함');if(w&&!w.am)base.warn.push('낙찰금액 확인 필요');if(!tps.length)base.warn.push('공종 미인식(직접 선택)');if(!nm)base.warn.push('단지명 없음');
  if(failed){base.k='bid';base.daw=''}
  return (tps.length?tps:['외벽']).map(tp=>({...base,tp,kw:cl[tp]||[],warn:base.warn.slice().concat(tps.length>1&&base.am?['금액은 공종 합산일 수 있음']:[])}))}
 const HSMT=['고탄성','탄성','우레탄','아크릴','에폭시','불소','실리콘','무기질','수성','시트방수','도막방수','액체방수','복합방수','아스팔트','침투성','발수','균열주입','에폭시주입','그라우팅','특허공법','Wet-on-Wet'];
-function hsMethod(lab,t){lab=String(lab||'').trim();if(lab)return lab.slice(0,60);const h=[];for(const k of HSMT){if(String(t).includes(k)&&!h.some(x=>x.includes(k)))h.push(k)}return h.slice(0,4).join('·')}
+function hsMethod(lab,t){lab=String(lab||'').trim();if(lab)return lab.slice(0,600);return hsMethodX(t)}
+/* v8: 공법·특허·공사방법을 원문 그대로 추출 (일반 분류어 생성 안 함, 특허번호 숫자 수정 안 함, 없으면 빈칸) */
+function hsMethodX(raw){let T=String(raw||'').replace(/\r/g,'\n').replace(/[ \t\u00a0\u3000]+/g,' ');T=T.replace(/\)\s*[,，;、]\s*/g,')\n');
+ const out=[],seen={},PN=/10\s*-\s*(?:\d{4}\s*-\s*)?\d{6,7}/,bl=s=>s.replace(/^\s*(?:[-–·•○●※■□◆▶▷]|\(?\d{1,2}[.)])\s*/,'').trim(),add=s=>{s=bl(s).replace(/\s+/g,' ');if(s.length>1&&!seen[s]){seen[s]=1;out.push(s)}};
+ for(const ln of T.split('\n')){const L=bl(ln);if(!L)continue;
+  if(/^(?:공사방법|시공방법|적용\s*공법|지정\s*공법|사용\s*공법|공법명?)\s*[:：]/.test(L)){add(L.slice(0,160));continue}
+  if(PN.test(L)&&/특허|신기술|공법|제\s*10/.test(L)){if(L.length<=120&&(L.match(/10\s*-\s*(?:\d{4}\s*-\s*)?\d{6,7}/g)||[]).length<2){add(L);continue}
+   const re=/([^.。;\n()（）]{2,60}?)\s*[(（][^()（）]*10\s*-\s*(?:\d{4}\s*-\s*)?\d{6,7}[^()（）]*[)）]/g;let m,n=0;while((m=re.exec(L))){add(m[0]);n++}
+   if(!n){const k=PN.exec(L).index;add(L.slice(Math.max(0,k-50),k+30))}}}
+ return out.join('\n')}
+function hsTelX(t){const T=String(t||''),N='((?:0\\d{1,2})[-.\\s)]*\\d{3,4}[-.\\s]*\\d{4})',m=new RegExp('관리사무소[^\\d\\n]{0,25}'+N).exec(T)||new RegExp('전화(?:번호)?\\s*[:：]?\\s*'+N).exec(T),f=new RegExp('팩스(?:번호)?\\s*[:：]?\\s*'+N).exec(T);return m||f?{t:m?saFt(m[1]):'',f:f?saFt(f[1]):''}:null}
 /* --- K-apt 사업자 선정(경쟁입찰) 결과 공개 — '낙찰업체 정보 / 계약기간 및 내용' 서식 --- */
 function hsClassLine(l){l=String(l||'');if(/내부/.test(l))return'내부';if(/주차|에폭시/.test(l))return'주차장';if(/옥상|방수|난간/.test(l))return'방수';if(/외벽|외부|재도장|균열|코킹|도장|도색|철재|부대시설|창틀/.test(l))return'외벽';return''}
 function hsKapt2(text){const T=String(text).replace(/\r/g,'');if(!/낙찰업체\s*정보/.test(T)||!/계약기간/.test(T))return[];
@@ -1475,7 +1487,7 @@ function hsMatch(name,addr,hh){const I=hsIdxN(),nn=hsNC(name),R=hsReg(addr);let 
 /* --- 레코드 생성 · 공고↔낙찰 병합 · 저장 --- */
 let HSID=Date.now();const hsNid=()=>++HSID;
 const hsFin=o=>{o.dt=o.den||o.dst||o.daw||'';o.pend=o.dt?0:1;o.k=(o.den||o.dst)?'work':(o.daw||o.co)?'award':'bid';return o};
-function hsMk(o,c){const x=hsCxOf(c)||{},isBid=o.k=='bid'||o.ak=='bid',r={id:o.id||hsNid(),c,nm:x.n||o.nm||'',sd:hsSd(x.sd||''),sg:hsSg(x.sg||''),tp:o.tp,k:o.k,bn:o.bn||'',wn:o.wn||'',mt:o.mt||'',dn:o.dn||'',dop:o.dop||'',daw:o.daw||'',dst:o.dst||'',den:o.den||'',co:o.co||'',am:isBid?0:(+o.am||0),ab:isBid?(+o.am||+o.ab||0):(+o.ab||0),kw:o.kw||[],mm:o.mm||'',src:o.src||'',ts:o.ts||Date.now()};
+function hsMk(o,c){const x=hsCxOf(c)||{},isBid=o.k=='bid'||o.ak=='bid',r={id:o.id||hsNid(),c,nm:x.n||o.nm||'',sd:hsSd(x.sd||''),sg:hsSg(x.sg||''),tp:o.tp,k:o.k,bn:o.bn||'',wn:o.wn||'',mt:o.mt||'',dn:o.dn||'',dop:o.dop||'',daw:o.daw||'',dst:o.dst||'',den:o.den||'',co:o.co||'',am:isBid?0:(+o.am||0),ab:isBid?(+o.am||+o.ab||0):(+o.ab||0),kw:o.kw||[],mm:o.mm||'',src:o.src||'',tl:o.tl||'',fx:o.fx||'',ts:o.ts||Date.now()};
  if(r.k=='bid'&&!(r.daw||r.co||r.dst||r.den)){r.dt='';r.pend=1;return r}return hsFin(r)}
 const hsRef=r=>hsPd(r.dn||r.dop||r.daw||r.dst||r.den);
 function hsSame(z,r){if(z.c!=r.c||z.tp!=r.tp||z.id==r.id)return false;if(z.bn&&r.bn)return z.bn==r.bn;
@@ -1486,7 +1498,7 @@ function hsSame(z,r){if(z.c!=r.c||z.tp!=r.tp||z.id==r.id)return false;if(z.bn&&r
 function hsMerge(z,r){const o={...z},t=(a,b)=>b||a,uniq=a=>[...new Set(a.filter(Boolean))];
  o.bn=t(z.bn,r.bn);o.wn=(r.wn||'').length>(z.wn||'').length?r.wn:z.wn;o.mt=t(z.mt,r.mt);
  o.dn=z.dn&&r.dn?(z.dn<r.dn?z.dn:r.dn):t(z.dn,r.dn);o.dop=t(z.dop,r.dop);o.daw=t(z.daw,r.daw);o.dst=t(z.dst,r.dst);o.den=t(z.den,r.den);o.co=t(z.co,r.co);
- o.am=t(z.am,r.am);o.ab=z.ab||r.ab||0;o.kw=uniq([...(z.kw||[]),...(r.kw||[])]);o.src=t(z.src,r.src);
+ o.am=t(z.am,r.am);o.ab=z.ab||r.ab||0;o.kw=uniq([...(z.kw||[]),...(r.kw||[])]);o.src=t(z.src,r.src);o.tl=t(z.tl,r.tl);o.fx=t(z.fx,r.fx);
  const ms=uniq([z.mm,r.mm].map(m=>(m||'').trim()));o.mm=ms.length==2&&(ms[0].includes(ms[1])||ms[1].includes(ms[0]))?(ms[0].length>=ms[1].length?ms[0]:ms[1]):ms.join(' · ');
  o.ts=Date.now();return hsFin(o)}
 const hsSig=r=>JSON.stringify([r.bn,r.wn,r.mt,r.dn,r.dop,r.daw,r.dst,r.den,r.co,r.am,r.ab,(r.kw||[]).join(),r.mm]);
@@ -1510,7 +1522,7 @@ async function hsSample(){try{return window.claude?await claude.use('sample'):nu
 const HSAIP=`당신은 아파트 도장·방수 공사의 입찰공고·낙찰결과 문서에서 정보를 뽑는 도우미입니다. 문서에 실제로 적힌 내용만 사용하고 추측하지 마세요. K-apt 낙찰 결과 화면이면 참여업체 표에서 '낙찰여부'가 Y인 행의 회사·응찰금액이 낙찰업체·낙찰금액이고, 입찰결과 등록일을 낙찰일(daw), 개찰일을 dop로 쓰세요. JSON 객체 하나로만 답하세요. 형식: {"items":[항목,…]}. 공종이 여러 개면 공종별로 항목을 나눕니다.
 항목 키: nm(단지명), ad(소재지·주소), wn(공사명·공고명), tp(외벽|방수|주차장|내부 중 하나. 외벽=외벽도장·재도장·균열보수, 방수=옥상방수 등, 주차장=주차장 바닥·에폭시, 내부=계단실·복도·내부도장), k(bid=입찰공고만, award=낙찰·계약, work=착공·준공 기록 있음), dn(공고일), dop(개찰·입찰일), daw(낙찰·계약일), dst(착공일), den(준공일) — 날짜는 YYYY-MM-DD, co(낙찰·시공업체 상호), am(금액 원 단위 정수. 낙찰·계약금액 우선, 없으면 기초·추정금액), kw(문서에 나온 핵심 공종 키워드 배열), mm(특이사항 한 줄), bn(입찰·공고번호), mt(공법·사양: 우레탄방수·아크릴·에폭시 등 문서에 적힌 것). 알 수 없는 값은 빈 문자열 또는 0.`;
 function hsFromAI(a,src){if(!Array.isArray(a))a=a&&Array.isArray(a.items)?a.items:[];return a.filter(z=>z&&typeof z=='object').map(z=>{const s=v=>typeof v=='string'?v.trim():'',dt=v=>{const d=hsDates(s(v))[0];return d||(/^\d{4}-\d{2}-\d{2}$/.test(s(v))?s(v):'')};const tpq=HST.includes(z.tp)?0:1,tp=tpq?'외벽':z.tp,k=['bid','award','work'].includes(z.k)?z.k:'bid';
-  return{nm:hsCleanCx(s(z.nm)),ad:s(z.ad),bn:s(z.bn).replace(/\D/g,''),mt:s(z.mt).slice(0,60),wn:s(z.wn).slice(0,120),tp,k,dn:dt(z.dn),dop:dt(z.dop),daw:dt(z.daw),dst:dt(z.dst),den:dt(z.den),co:hsCleanCo(s(z.co)),am:Math.round(+z.am)||0,ak:'',kw:(Array.isArray(z.kw)?z.kw.map(String):[]).slice(0,8),mm:s(z.mm).slice(0,120),src:src||'',warn:tpq?['공종 확인 필요']:[],tpq,ai:1}})}
+  return{nm:hsCleanCx(s(z.nm)),ad:s(z.ad),bn:s(z.bn).replace(/\D/g,''),mt:s(z.mt).slice(0,600),wn:s(z.wn).slice(0,120),tp,k,dn:dt(z.dn),dop:dt(z.dop),daw:dt(z.daw),dst:dt(z.dst),den:dt(z.den),co:hsCleanCo(s(z.co)),am:Math.round(+z.am)||0,ak:'',kw:(Array.isArray(z.kw)?z.kw.map(String):[]).slice(0,8),mm:s(z.mm).slice(0,120),src:src||'',warn:tpq?['공종 확인 필요']:[],tpq,ai:1}})}
 async function hsRead(f){const ext=f.name.split('.').pop().toLowerCase(),R={text:'',rows:null,imgs:[],json:null};
  if(f.size>15728640)throw new Error('파일이 15MB를 초과합니다');
  if(/^(csv|tsv|txt|md|text)$/.test(ext)){R.text=await uDecode(f);if(ext!='txt'&&/,|\t/.test(R.text.split('\n')[0]||''))R.rows=csvp(R.text)}
@@ -1568,7 +1580,7 @@ const hsFoSave=()=>{try{localStorage.setItem(HSFO,JSON.stringify(HSFOV))}catch(e
 const hsDirty=()=>{HSX=null;if(AP.list)AP.list.forEach(x=>{if(x._hs)x._hs=null})};
 const hsAmT=v=>v?hsWon(v):'';
 const hsRecDt=r=>r.dt||r.daw||r.dop||r.dn||'';
-const hsRecLine=r=>[r.tp,(r.dn&&(r.daw||r.den||r.dst||r.co))?'공고+낙찰':hsLabel[r.k]||'',hsYM(hsRecDt(r)),r.mt,r.co,r.am?hsAmT(r.am):r.ab?'추정 '+hsAmT(r.ab):''].filter(Boolean).join(' · ');
+const hsRecLine=r=>[r.tp,(r.dn&&(r.daw||r.den||r.dst||r.co))?'공고+낙찰':hsLabel[r.k]||'',hsYM(hsRecDt(r)),String(r.mt||'').replace(/\n+/g,' / '),r.co,r.am?hsAmT(r.am):r.ab?'추정 '+hsAmT(r.ab):''].filter(Boolean).join(' · ');
 const hsCxLbl=x=>x?`${x.n} · ${(rjAddr(x)||'').slice(0,24)}${x.hh?' · '+fmt(x.hh)+'세대':''}`:'';
 const hsRow=(r,ttl,sub)=>`<div class="hsrec2"><button type="button" class="hsrec" data-db="hsed" data-v="${r.id}"><b>${esc(ttl)}</b><small>${esc(sub)}</small></button><div class="hsact"><button type="button" data-db="hsed" data-v="${r.id}">수정</button><button type="button" data-db="hsrm" data-v="${r.id}">${HSR.rm==r.id?'정말 삭제':'삭제'}</button></div></div>`;
 function hsRe(){const b=document.querySelector('#db .dbb'),y=b?b.scrollTop:0;DBS.mode=='rj'?rjRender():dbRender();const n=document.querySelector('#db .dbb');if(n)n.scrollTop=y}
@@ -1594,7 +1606,7 @@ function hsItem(it,i){const c=it.c?hsCxOf(it.c):null,opts=[...(c&&!it.cands.some
  <div class="hsg2"><label>공종${it.tpq?' <em class="hso">확인 필요</em>':''}<select class="i" data-hsf="tp" data-i="${i}">${it.tp?'':'<option value="" selected>확인 필요(선택)</option>'}${HST.map(t=>`<option${it.tp==t?' selected':''}>${t}</option>`).join('')}</select>${hsEv(it,'tp')}</label><label>구분<select class="i" data-hsf="k" data-i="${i}">${Object.entries(hsLabel).map(([k,l])=>`<option value="${k}"${it.k==k?' selected':''}>${l}${k=='bid'?'(공고)':k=='award'?'(낙찰·계약)':'(착공·준공)'}</option>`).join('')}</select></label></div>
  <label>연결 단지${it.how?` <em class="hso">${esc(it.how)}</em>`:''}<select class="i" data-hsf="c" data-i="${i}"><option value="">연결 안 함</option>${opts.map(z=>`<option value="${esc(z.c)}"${it.c==z.c?' selected':''}>${esc(hsCxLbl(z))}</option>`).join('')}</select>${hsEv(it,'c')}</label>
  <label>단지 직접 검색<input class="i" data-hsq="${i}" placeholder="단지명 · 지역 입력 후 확인" autocomplete="off"></label>
- ${(()=>{const z=it.c&&it.inc&&it.tp?hsFindSame(hsMk(it,it.c)):null;return z?`<p class="hsmg">↻ 기존 ${z.daw||z.co?'낙찰':'입찰 공고'} 기록(${esc(hsRecLine(z))})에 보충·병합됩니다 — 새 이력이 중복 생성되지 않습니다</p>`:''})()}${f('wn','공사명')}${hsEv(it,'wn')}${f('mt','공법(우레탄·아크릴 등)')}<div class="hsg2">${f('co','업체')}<label>금액(원)${it.am?` <em class="hso">${hsWon(it.am)} (${+(it.am/1e6).toFixed(2)}백만원)</em>`:''}<input class="i" data-hsf="am" data-i="${i}" inputmode="numeric" value="${it.am||''}">${hsEv(it,'am')}</label></div>
+ ${(()=>{const z=it.c&&it.inc&&it.tp?hsFindSame(hsMk(it,it.c)):null;return z?`<p class="hsmg">↻ 기존 ${z.daw||z.co?'낙찰':'입찰 공고'} 기록(${esc(hsRecLine(z))})에 보충·병합됩니다 — 새 이력이 중복 생성되지 않습니다</p>`:''})()}${f('wn','공사명')}${hsEv(it,'wn')}<label>공법 / 특허 / 공사방법<textarea class="i" rows="4" data-hsf="mt" data-i="${i}" style="min-height:84px;resize:vertical" placeholder="문서에 적힌 공법명·특허번호·공사방법 (여러 줄)">${esc(it.mt||'')}</textarea></label><div class="hsg2">${f('co','업체')}<label>금액(원)${it.am?` <em class="hso">${hsWon(it.am)} (${+(it.am/1e6).toFixed(2)}백만원)</em>`:''}<input class="i" data-hsf="am" data-i="${i}" inputmode="numeric" value="${it.am||''}">${hsEv(it,'am')}</label></div>
  <div class="hsg3">${f('dn','공고일','date')}${f('dop','개찰일','date')}${f('daw','낙찰일','date')}</div><div class="hsg2">${f('dst','착공일','date')}${f('den','준공일','date')}</div>
  <label>핵심 키워드<input class="i" data-hsf="kw" data-i="${i}" value="${esc((it.kw||[]).join(', '))}"></label><label>비고 <em class="hso">입찰·일정·조건 요약</em><textarea class="i" rows="4" data-hsf="mm" data-i="${i}">${esc(it.mm||'')}</textarea>${hsEv(it,'mm')}</label>${hsCmp(it,i)}${warn.length?`<p class="hsw">⚠ ${esc(warn.join(' · '))}</p>`:''}</div>`}
 async function hsBuild(arr){await apInit();return arr.map(r=>{const it={...r,kw:r.kw||[],warn:(r.warn||[]).slice(),cands:[],c:'',how:'',inc:1};
@@ -1611,13 +1623,13 @@ const hsNew=x=>({id:0,c:x,tp:'외벽',k:'work',wn:'',dn:'',dop:'',daw:'',dst:'',
 function hsEdit(){const r=HSR.ed||hsNew(HSR.x),x=hsCxOf(r.c||HSR.x),f=(k,l,t,v)=>`<label>${l}<input class="i" id="hse-${k}" type="${t||'text'}" value="${esc(v!==undefined?v:r[k]||'')}"></label>`;
  return `<div class="rjk"><div class="rjs"><i>${RI.bld}</i><b>${esc(x?x.n:'단지')}</b><small class="r">${r.id?'이력 수정':'새 이력'}</small></div>
  <div class="hsg2"><label>공종<select class="i" id="hse-tp">${HST.map(t=>`<option${r.tp==t?' selected':''}>${t}</option>`).join('')}</select></label><label>구분<select class="i" id="hse-k">${Object.entries(hsLabel).map(([k,l])=>`<option value="${k}"${r.k==k?' selected':''}>${l}</option>`).join('')}</select></label></div>
- ${f('wn','공사명')}${f('mt','공법')}${f('bn','입찰·공고번호')}<div class="hsg2">${f('co','업체')}${f('am','금액(원)','text',r.am||r.ab||'')}</div>
+ ${f('wn','공사명')}<label>공법 / 특허 / 공사방법<textarea class="i" id="hse-mt" rows="4" style="min-height:84px;resize:vertical">${esc(r.mt||'')}</textarea></label>${f('bn','입찰·공고번호')}<div class="hsg2">${f('co','업체')}${f('am','금액(원)','text',r.am||r.ab||'')}</div>
  <div class="hsg3">${f('dn','공고일','date')}${f('dop','개찰일','date')}${f('daw','낙찰일','date')}</div><div class="hsg2">${f('dst','착공일','date')}${f('den','준공일','date')}</div>
  ${f('kw','핵심 키워드(쉼표로 구분)','text',(r.kw||[]).join(', '))}${f('mm','메모')}
  <p class="dbm">준공일 → 착공일 → 낙찰·계약일 순으로 가장 늦은 확정 날짜를 보수주기 기점으로 씁니다. 날짜가 모두 없으면 입찰 공고(미반영)로만 저장됩니다.</p>
  <div class="dba"><button class="pri" data-db="hsok">저장</button>${r.id?'<button data-db="hsdel">삭제</button>':''}<button data-db="hsb">취소</button></div>${HSR.msg?`<p class="dbm hsm">${esc(HSR.msg)}</p>`:''}</div>`}
 function hsEdSave(){const g=k=>(document.getElementById('hse-'+k)||{}).value||'',r=HSR.ed||hsNew(HSR.x),c=r.c||HSR.x;if(!c||!hsCxOf(c)){HSR.msg='⚠ 단지가 지정되지 않았습니다';hsRender(1);return}
- const o={id:r.id||0,ts:r.ts,c,tp:g('tp'),k:g('k'),wn:g('wn').trim(),mt:g('mt').trim(),bn:g('bn').replace(/\D/g,''),ab:r.ab||0,co:hsCleanCo(g('co')),am:hsMoney(g('am'))||parseInt(g('am').replace(/\D/g,''))||0,mm:g('mm').trim(),kw:g('kw').split(/[,，·\s]+/).filter(Boolean),dn:g('dn'),dop:g('dop'),daw:g('daw'),dst:g('dst'),den:g('den'),src:r.src||'직접 입력'};
+ const o={id:r.id||0,ts:r.ts,c,tp:g('tp'),k:g('k'),wn:g('wn').trim(),mt:g('mt').trim(),bn:g('bn').replace(/\D/g,''),tl:r.tl||'',fx:r.fx||'',ab:r.ab||0,co:hsCleanCo(g('co')),am:hsMoney(g('am'))||parseInt(g('am').replace(/\D/g,''))||0,mm:g('mm').trim(),kw:g('kw').split(/[,，·\s]+/).filter(Boolean),dn:g('dn'),dop:g('dop'),daw:g('daw'),dst:g('dst'),den:g('den'),src:r.src||'직접 입력'};
  if(!o.id)delete o.id;if(!o.kw.length){const cl=hsClassify(o.wn+' '+o.mm)[o.tp];if(cl)o.kw=cl}
  const rec=hsMk(o,c);rec.ts=Date.now();const st=hsUpsert(rec);if(st=='duplicate'){HSR.msg='⚠ 같은 내용의 이력이 이미 있습니다';hsRender(1);return}
  hsSave();hsDirty();DBS.msg='이력을 저장했습니다';hsGo();toast('이력을 저장했습니다')}
@@ -1629,7 +1641,7 @@ function hsHub(){const cs=new Set(HIST.map(r=>r.c)),by=HST.map(t=>t+' '+HIST.fil
  <div class="dbc"><h5>공사 이력 DB</h5><p class="dbm">총 <b>${HIST.length}</b>건 · 단지 <b>${cs.size}</b>곳${HIST.length?'<br>'+by:''}</p><div class="dba"><button data-db="hsmg"${HIST.length>1?'':' disabled'}>공고·낙찰 중복 합치기</button><button data-db="hsexc"${HIST.length?'':' disabled'}>CSV 내보내기</button><button data-db="hsexj"${HIST.length?'':' disabled'}>JSON 내보내기</button></div></div>
  ${rc.length?`<div class="dbc"><h5>최근 등록</h5>${rc.map(r=>{const x=hsCxOf(r.c);return hsRow(r,x?x.n:r.nm||r.c,hsRecLine(r)+(r.pend?' · 기점 제외':'')+(r.kw&&r.kw.length?' · '+hsKw(r):''))}).join('')}</div>`:''}`}
 function hsExport(kind){if(kind=='json'){return saveF(`공사이력_${today()}.json`,new Blob([JSON.stringify({app:'Activity',kind:'hist',hist:HIST,hcy:HSY},null,1)],{type:'application/json'}))}
- const R=[['단지코드','단지명','시도','시군구','공종','구분','공사명','공법','입찰번호','공고일','개찰일','낙찰일','착공일','준공일','업체','금액','키워드','메모','출처']].concat(HIST.map(r=>[r.c,r.nm,r.sd,r.sg,r.tp,hsLabel[r.k]||r.k,r.wn,r.mt,r.bn,r.dn,r.dop,r.daw,r.dst,r.den,r.co,r.am||'',(r.kw||[]).join(' '),r.mm,r.src]));return saveF(`공사이력_${today()}.csv`,new Blob([csvs(R)],{type:'text/csv'}))}
+ const R=[['단지코드','단지명','시도','시군구','공종','구분','공사명','공법','입찰번호','공고일','개찰일','낙찰일','착공일','준공일','업체','금액','키워드','메모','출처']].concat(HIST.map(r=>[r.c,r.nm,r.sd,r.sg,r.tp,hsLabel[r.k]||r.k,r.wn,String(r.mt||'').replace(/\n+/g,' / '),r.bn,r.dn,r.dop,r.daw,r.dst,r.den,r.co,r.am||'',(r.kw||[]).join(' '),r.mm,r.src]));return saveF(`공사이력_${today()}.csv`,new Blob([csvs(R)],{type:'text/csv'}))}
 /* --- 단지 상세: 공종별 보수주기 카드 --- */
 function hsSec(x){const c=hsCalc(x),H=hsOf(x.c).slice().sort((a,b)=>hsRecDt(a)<hsRecDt(b)?1:-1);
  const row=t=>{const z=c[t],L=z.last;return `<div class="hsr"><div class="hsr1"><b>${t}</b>${hsBadge(z)}<span>${esc(hsRemTxt(z))}</span></div><div class="hsr2">${HSCO[x.c]&&+HSCO[x.c][t]?'이 단지 ':'법정 '}<input class="i hscx" type="number" min="1" max="40" step="0.5" data-hscx="${t}" data-c="${esc(x.c)}" value="${z.cy}">년${HSCO[x.c]&&+HSCO[x.c][t]?` <button class="hscr" data-db="hscxr" data-v="${t}" data-c="${esc(x.c)}">기본값</button>`:''}${z.base?` · 기점 ${hsYM(z.base)}(${z.src}) · 경과 ${z.el}년 · 도래 ${hsYM(z.due)}`:' · 기점일 없음(사용승인일 미등록)'}</div>${L?`<div class="hsr3">최근 ${esc(hsRecLine(L))}${hsKw(L)?'<br>'+esc(hsKw(L)):''}${L.mm?'<br>'+esc(L.mm):''}</div>`:`<div class="hsr3 m">공사 이력 없음${z.base?' · 사용승인일 기준':''}</div>`}${z.bid?`<div class="hsr3 b">입찰 공고 ${hsYM(z.bid.dn)} 진행/미반영${z.bid.co?' · '+esc(z.bid.co):''}</div>`:''}</div>`};
@@ -1760,6 +1772,7 @@ const HSAWQ=/낙찰\s*방법|낙찰자\s*(?:결정|선정)|낙찰자는|낙찰�
 function hsDocKind(T){const t=String(T),b=/입찰\s*공고|사업자\s*선정\s*공고|입찰서\s*제출|입찰\s*마감|현장\s*설명|입찰\s*참가|입찰\s*조건/.test(t),
  u=t.replace(HSAWQ,' '),a=/낙찰\s*업체\s*정보|참여\s*업체\s*정보|(?:낙찰|선정|계약)\s*(?:업체|자|회사)\s*(?:명)?\s*[:：]\s*\S|낙찰\s*금액\s*[:：]?\s*[\d,]{5,}|최종\s*선정\s*업체|계약\s*체결\s*(?:일|완료)|입찰\s*결과/.test(u);return{bid:b,award:a}}
 function hsPost(items,text){if(!text)return items;const dk=hsDocKind(text);if(!items.length)return items;
+ {const mx=hsMethodX(text),tl=hsTelX(text);items.forEach(it=>{if(mx&&(items.length==1||!it.mt))it.mt=mx;if(tl&&items.length==1){if(!it.tl)it.tl=tl.t;if(!it.fx)it.fx=tl.f}});const wm=[];if(/특허/.test(text)&&!/10\s*-\s*(?:\d{4}\s*-\s*)?\d{6,7}/.test(text))wm.push('특허번호 확인 필요');if(/공법|공사방법|시공방법/.test(text)&&!mx)wm.push('공법 확인 필요');if(wm.length)items.forEach(it=>{it.warn=(it.warn||[]).concat(wm.filter(w=>!(it.warn||[]).includes(w)))})}
  items.forEach(it=>{if(it.tp=='주차장'&&it.kw&&it.kw.length&&it.kw.every(k=>/^(?:지하\s*)?주차장$/.test(k))){it.tpq=1;it.warn=(it.warn||[]).concat('주차장 장소만 확인됩니다 — 도장·방수·바닥 중 공종을 확인하세요')}});
  if(dk.bid&&!dk.award){const rk=hsRemark(text);items.forEach(it=>{if(it.k=='award'||it.k=='work'&&!it.dst&&!it.den){it.k='bid';it.daw='';it.warn=(it.warn||[]).filter(w=>!/^(?:금액|업체명) 없음/.test(w)).concat('낙찰 결과가 아닌 공고문으로 판단했습니다')}
   if(it.k=='bid'&&rk)it.mm=rk;const kx=hsKw2((it.wn||'')+' '+(it.kw||[]).join(' ')+' 입찰');it.kw=[...new Set([...(it.kw||[]).filter(k=>!/^(?:외벽|도장|재도장)$/.test(k)||it.tp!='주차장'),...kx])].slice(0,10);if(/사업자\s*선정/.test(text)&&!it.kw.includes('사업자 선정'))it.kw.push('사업자 선정')})}
@@ -1804,18 +1817,21 @@ function saFiltered(L){const gp=SAF.st=='all'?null:(SAGP.find(g=>g[0]==SAF.st)||
   else if(so=='over')c=A(U(a),U(b));else if(so=='due')c=A(U(a)<=0?1:0,U(b)<=0?1:0)||A(U(a),U(b));else if(so=='hh')c=A(b.x.hh||0,a.x.hh||0);
   else if(so=='last')c=A((b.o&&b.o.last)||'',(a.o&&a.o.last)||'');else if(so=='next')c=A((a.o&&a.o.nx)||'9999',(b.o&&b.o.nx)||'9999');
   return c||A(b.x.hh||0,a.x.hh||0)});return r}
-function saCounts(L){const c={tot:0,no:0,over:0,y1:0,sch:0,late:0,qt:0,won:0};for(const e of L){if(!saReg(e))continue;const n=e.pr.nx,st=e.o?e.o.st:'미접촉';
+function saCounts(L){const c={tot:0,no:0,over:0,y1:0,sch:0,late:0,qt:0,bd:0,won:0};for(const e of L){if(!saReg(e))continue;const n=e.pr.nx,st=e.o?e.o.st:'미접촉';
   if(saTgt(e)){c.tot++;if(st=='미접촉')c.no++;if(e.pr.u<=0)c.over++;else if(e.pr.u<=365)c.y1++}
-  if(e.o&&(n=='오늘'||n=='예정'))c.sch++;if(n=='지연')c.late++;if(st=='사양제안'||st=='견적진행')c.qt++;if(st=='수주')c.won++}return c}
+  if(e.o&&(n=='오늘'||n=='예정'))c.sch++;if(n=='지연')c.late++;if(st=='사양제안'||st=='견적진행')c.qt++;if(st=='입찰·경쟁')c.bd++;if(st=='수주')c.won++}return c}
 function saMo(d){const m=Math.round(Math.abs(d)/30.4375);return m<24?m+'개월':Math.floor(m/12)+'년'+(m%12?' '+m%12+'개월':'')}
 function saTp(c){if(!c||c.rem==null)return{t:'기점 없음',l:'n0'};const es=c.src=='사용승인일'?' · 추정':'';if(c.rem<=0)return{t:'도래 초과 '+(-c.rem<15?'1개월 미만':saMo(c.rem))+es,l:'ov'};return{t:saMo(c.rem)+' 남음'+es,l:c.rem<=365?'y1':'ft'}}
 const saFld=(k,v)=>v?`<div class="rjr"><span>${k}</span><b>${esc(v)}</b></div>`:'';
 function saDash(L){const c=saCounts(L),b=(k,n,l,cl)=>`<button type="button" class="sad ${cl}" data-db="sad" data-v="${k}"><b>${fmt(n)}</b><span>${l}</span></button>`;
- return `<div class="sadg">${b('tgt',c.tot,'영업 대상','')}${b('no',c.no,'미접촉','')}${b('over',c.over,'도래 초과','d')}${b('y1',c.y1,'1년 이내','s')}${b('sch',c.sch,'방문 예정','')}${b('late',c.late,'활동 지연','d')}${b('qt',c.qt,'견적 진행','')}${b('won',c.won,'수주','h')}</div><p class="sadn">영업 대상 = 도래 초과 + 3년 이내 도래(수주·보류·실패 제외) · 전체 DB ${fmt(AP.list.length)}개 단지</p>`}
+ return `<div class="sadg">${b('tgt',c.tot,'영업 대상','')}${b('no',c.no,'미접촉','')}${b('over',c.over,'도래 초과','d')}${b('y1',c.y1,'1년 이내','s')}${b('sch',c.sch,'방문 예정','')}${b('late',c.late,'활동 지연','d')}${b('qt',c.qt,'견적 진행','')}${b('bd',c.bd,'입찰 진행','')}${b('won',c.won,'수주','h')}</div><p class="sadn">영업 대상 = 도래 초과 + 3년 이내 도래(수주·보류·실패 제외) · 전체 DB ${fmt(AP.list.length)}개 단지</p>`}
+const saFt=v=>{const d=String(v||'').replace(/\D/g,'');if(d.length<9||d.length>11||d[0]!='0')return'';return d.slice(0,2)=='02'?(d.length==9?d.replace(/(\d{2})(\d{3})(\d{4})/,'$1-$2-$3'):d.replace(/(\d{2})(\d{4})(\d{4})/,'$1-$2-$3')):(d.length==10?d.replace(/(\d{3})(\d{3})(\d{4})/,'$1-$2-$3'):d.replace(/(\d{3})(\d{4})(\d{4})/,'$1-$2-$3'))};
+function saTel(e){const o=e.o,c=e.x.c;let t=o&&o.ct?((/0\d{1,2}[-.\s]?\d{3,4}[-.\s]?\d{4}/.exec(o.ct)||[''])[0]):'',f=o&&o.fax?o.fax:'';if(!t||!f){const hs=HIST.filter(r=>r.c==c&&(r.tl||r.fx)).sort((a,b)=>(b.ts||0)-(a.ts||0));if(!t)t=(hs.find(r=>r.tl)||{}).tl||'';if(!f)f=(hs.find(r=>r.fx)||{}).fx||''}return{t:saFt(t),f:saFt(f)}}
+const saTL=e=>{const p=saTel(e);return p.t?`<div class="satl"><span>관리사무소</span><a href="tel:${p.t.replace(/-/g,'')}">${p.t}</a><a class="call" href="tel:${p.t.replace(/-/g,'')}">전화하기</a></div>`:`<div class="satl no"><span>관리사무소</span><em>연락처 미등록</em></div>`};
 function saCard(e){const{x,cs,o,pr}=e,g=pr.g,n=pr.nx,st=o?o.st:'미접촉';
  const tps=HST.map(t=>{const z=saTp(cs[t]);return `<span class="sat ${z.l}${HSF.tp==t?' on':''}"><em>${t}</em>${z.t}</span>`}).join('');
  return `<div class="sac g${g}"><div class="sah"><b>${esc(x.n)}</b><span class="sapr p${g}">${SAPL[g]}</span></div><div class="saa">${esc(rjAddr(x))}</div>
- <div class="sam"><span>세대 <b>${fmt(x.hh)}</b></span><span>동수 <b>${x.dn}</b></span>${x.ba>0?`<span>관리비부과 <b>${fmt(x.ba)}㎡</b></span>`:''}</div><div class="sag">${tps}</div>
+ <div class="sam"><span>세대 <b>${fmt(x.hh)}</b></span><span>동수 <b>${x.dn}</b></span>${x.ba>0?`<span>관리비부과 <b>${fmt(x.ba)}㎡</b></span>`:''}</div>${saTL(e)}<div class="sag">${tps}</div>
  <div class="sas"><span class="sast s${SAPG.includes(st)?'p':SACL.includes(st)?'c':'n'}">${st}</span><span>${o&&o.last?'마지막 접촉 '+o.last:'접촉 기록 없음'}</span>${o&&n&&n!='완료'?`<span class="sanx n${n}">다음 ${o.nx?o.nx+' · ':''}${saNxL[n]}</span>`:''}${o&&o.who?`<span>담당 ${esc(o.who)}</span>`:''}</div>
  <div class="saw">${pr.why.slice(0,3).map(esc).join(' · ')}</div>
  <div class="saact"><button type="button" class="pri" data-db="saop" data-c="${esc(x.c)}">${o?'영업기회 수정':'영업기회 등록'}</button><button type="button" data-db="savi" data-c="${esc(x.c)}">방문 기록</button><button type="button" data-db="sadt" data-c="${esc(x.c)}">상세 정보</button></div>
@@ -1823,7 +1839,7 @@ function saCard(e){const{x,cs,o,pr}=e,g=pr.g,n=pr.nx,st=o?o.st:'미접촉';
 function saMore(c){const e=(saData().find(z=>z.x.c==c));if(!e)return'';const{x,cs,o}=e,hs=HIST.filter(r=>r.c==c).sort((a,b)=>String(b.dt||'').localeCompare(String(a.dt||''))).slice(0,4);
  return `<div class="sak2"><h6>단지 정보</h6>${saFld('주소',rjAddr(x))}${saFld('동수 · 세대수',fmt(x.dn)+'동 · '+fmt(x.hh)+'세대')}${saFld('최고층',x.fl>0?x.fl+'층':'')}${saFld('관리비부과 면적',x.ba>0?fmt(x.ba)+'㎡':'')}${saFld('사용승인일',x.ap)}
  <h6>공종별 도래 기준</h6>${HST.map(t=>{const z=cs[t];return saFld(t,z?(HSCO[x.c]&&HSCO[x.c][t]?'이 단지 ':'법정 ')+z.cy+'년 · 기점 '+(z.base?hsFd(z.base):'없음')+(z.src?' ('+z.src+')':''):'')}).join('')}
- <h6>영업 정보</h6>${o?saFld('관리사무소',o.ofc)+saFld('관리사무소 담당자',o.mgr)+saFld('연락처',o.ct)+saFld('팩스',o.fax)+saFld('재도장 계획',o.plan)+saFld('예상 공사 시기',o.est)+saFld('제안 제품',o.prod)+saFld('제안 사양',o.spec)+saFld('경쟁사',o.comp):'<p class="dbm">등록된 영업기회가 없습니다. 관리사무소·전화·팩스는 단지 DB에 없어 영업기회 등록 시 직접 입력합니다.</p>'}
+ <h6>영업 정보</h6>${saFld('관리사무소 전화',saTel(e).t||'연락처 미등록')}${saFld('팩스번호',saTel(e).f)}${o?saFld('관리사무소',o.ofc)+saFld('관리사무소 담당자',o.mgr)+saFld('연락처',o.ct)+saFld('재도장 계획',o.plan)+saFld('예상 공사 시기',o.est)+saFld('제안 제품',o.prod)+saFld('제안 사양',o.spec)+saFld('경쟁사',o.comp):'<p class="dbm">등록된 영업기회가 없습니다. 관리사무소 연락처는 단지 DB에 없어 입찰·낙찰 이력(K-apt 문서)에서 읽거나 영업기회 등록 시 직접 입력합니다.</p>'}
  <h6>공사·입찰 이력</h6>${hs.length?hs.map(r=>`<div class="rjr"><span>${esc(r.tp)} · ${r.k=='bid'?'입찰':r.k=='award'?'낙찰':'공사'}</span><b>${esc((r.wn||'')+' '+(r.co||'')+' '+(r.dt?hsFd(r.dt):''))}</b></div>`).join(''):'<p class="dbm">등록된 이력이 없습니다.</p>'}</div>`}
 const hsFd=d=>d instanceof Date?d.toISOString().slice(0,10):String(d||'').slice(0,10);
 function saChip(k,v,l,on){return `<button type="button" class="sac2${on?' on':''}" data-db="saf" data-k="${k}" data-v="${esc(v)}">${l}</button>`}
@@ -1874,7 +1890,7 @@ function saGo(v,c){SAS.ret=DBS.view=='detail'?'detail':'list';DBS.view=v;DBS.cur
 function saBack(){DBS.view=SAS.ret=='detail'&&DBS.cur?'detail':'list';SAS.del=null;saRef()}
 document.addEventListener('click',async e=>{const t=e.target.closest('[data-db]');if(!t)return;const a=t.dataset.db,v=t.dataset.v,c=t.dataset.c;if(!/^sa/.test(a))return;
  if(a=='saf'){const k=t.dataset.k;if(k=='tp')HSF.tp=v;else SAF[k]=v;SAF.n=40;saRef();return}
- if(a=='sad'){const M={tgt:{pr:'target',st:'all',nx:'all'},no:{pr:'target',st:'미접촉',nx:'all'},over:{pr:'over',st:'all',nx:'all'},y1:{pr:'y1',st:'all',nx:'all'},sch:{pr:'all',st:'all',nx:'sched'},late:{pr:'all',st:'all',nx:'late'},qt:{pr:'all',st:'견적·제안',nx:'all'},won:{pr:'all',st:'수주',nx:'all'}}[v];if(M){Object.assign(SAF,M,{n:40});saRef()}return}
+ if(a=='sad'){const M={tgt:{pr:'target',st:'all',nx:'all'},no:{pr:'target',st:'미접촉',nx:'all'},over:{pr:'over',st:'all',nx:'all'},y1:{pr:'y1',st:'all',nx:'all'},sch:{pr:'all',st:'all',nx:'sched'},late:{pr:'all',st:'all',nx:'late'},qt:{pr:'all',st:'견적·제안',nx:'all'},bd:{pr:'all',st:'입찰·경쟁',nx:'all'},won:{pr:'all',st:'수주',nx:'all'}}[v];if(M){Object.assign(SAF,M,{n:40});saRef()}return}
  if(a=='safr'){Object.assign(SAF,{pr:'all',st:'all',nx:'all',so:'pri',n:40});HSF.tp='all';DBS.q='';DBS.sd='';DBS.sg='';saRef();return}
  if(a=='samore'){SAF.n+=40;saRefList();return}
  if(a=='sadt'){const x=saCxOf(c);if(x){DBS.cur=x;DBS.view='detail';rjRender()}return}
@@ -1895,6 +1911,11 @@ document.addEventListener('toggle',e=>{const d=e.target;if(!d.classList||!d.clas
 function saBody(x){if(DBS.fill)return x?rjDetail(x):rjList();if(x&&DBS.view=='so')return saFormO(x);if(x&&DBS.view=='sv')return saFormV(x);if(x){const d=rjDetail(x),i=d.indexOf('\n');return i<0?d+saSec(x):d.slice(0,i)+saSec(x)+d.slice(i)}return saList()}
 
 
+;(function(){const vv=window.visualViewport,Rt=document.documentElement,set=()=>{const kb=vv?Math.max(0,Math.round(innerHeight-vv.height-vv.offsetTop)):0;Rt.style.setProperty('--kb',kb+'px');document.body.classList.toggle('kbd',kb>80)};
+if(vv){vv.addEventListener('resize',set);vv.addEventListener('scroll',set)}
+document.addEventListener('focusin',e=>{const t=e.target;if(t&&t.id=='rjq'){[120,400].forEach(ms=>setTimeout(()=>{set();const b=t.closest('.rjq')||t;scrollTo({top:Math.max(0,b.getBoundingClientRect().top+scrollY-8),behavior:'smooth'})},ms))}});
+document.addEventListener('focusout',()=>setTimeout(set,250));
+document.addEventListener('click',e=>{const a=document.activeElement;if(a&&a.id=='rjq'&&e.target.closest&&e.target.closest('.sac button,.sac a,.sac summary,.rjgo2'))a.blur()},true)})();
 pdl();render();
 </script><script>if("serviceWorker" in navigator&&location.protocol!=="file:"){addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}</script>
 </body></html>
