@@ -1,5 +1,5 @@
 /* Activity 표준화 보고서 — 오프라인 캐시 (앱을 갱신하면 아래 VERSION 숫자를 올리세요) */
-const VERSION='v3',CACHE='activity-'+VERSION,SHELL=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png'];
+const VERSION='v4',CACHE='activity-'+VERSION,SHELL=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith('activity-')&&x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;const u=new URL(r.url),same=u.origin===location.origin;
